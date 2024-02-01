@@ -1,0 +1,4 @@
+[submodule "lib/ArduinoBLE"]
+	path = lib/ArduinoBLE
+	url = https://github.com/Mankianer/ArduinoBLE.git
+	branch = mankianer/fix-uuid-string-copy
