@@ -13,7 +13,7 @@ void setup() {
     BLESetUp::setUpBLE();
 
     Serial.println("Starte Lampe!");
-    lampe = new Lampe(6, 64 * 4);
+    lampe = new Lampe(D6, 64 * 4);
     BLESetUp::registerBLEHandler([&](BLEEvent<long> event) {
         lampe->inputBLE(event);
     });

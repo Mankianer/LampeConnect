@@ -1,8 +1,8 @@
 #ifndef MODUS_H
 #define MODUS_H
 
-#include "..\Lampe.h"
-#include "..\BLESetUp.h"
+#include "../Lampe.h"
+#include "../BLESetUp.h"
 #include <Arduino.h>
 
 class BaseModus
@@ -23,8 +23,21 @@ public:
 class FillModus : public BaseModus {
 protected:
 public:
-    void enter() override;
     FillModus(Lampe& lampe) : BaseModus(lampe) {}
+    void enter() override;
+    void inputBLE(BLEEvent<long> event) override;
+};
+
+class RandomModus : public BaseModus {
+private:
+    long maxSpeedms = 1000;
+    long lastUpdate = 0;
+    void genRandom();
+protected:
+public:
+    RandomModus(Lampe& lampe) : BaseModus(lampe) {}
+    void enter() override;
+    void update() override;
     void inputBLE(BLEEvent<long> event) override;
 };
 

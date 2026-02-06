@@ -26,13 +26,14 @@ void Lampe::loadModi() {
     modusList.clear();
     modusList.push_back(modus);
     modusList.push_back(new FillModus(*this));
+    modusList.push_back(new RandomModus(*this));
 }
 
 void Lampe::inputBLE(BLEEvent<long> event) {
     //if modus wechsel
     if(event.eventType == BLEEventTypes::modus) {
         //validate modus
-        if(event.value < 0 || event.value >= modusList.size()) {
+        if(event.value < 0 || event.value >= (long) modusList.size()) {
             Serial.println("Invalid modus: " + String(event.value));
             return;
         } else {
@@ -146,4 +147,9 @@ void Lampe::shiftPixels(int shift) {
 
     // Wichtig: Den Speicher freigeben
     delete[] temp;
+}
+
+int16_t Lampe::getNumPixels() const //TODO per pre-compiler umsetzen
+{
+    return numPixels;
 }

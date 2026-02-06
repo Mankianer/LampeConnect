@@ -24,6 +24,7 @@ public:
     void clear();
     void setPixelColor(uint16_t n, uint32_t c);
     void shiftPixels(int shift);
+    int16_t getNumPixels() const;
 private:
     Adafruit_NeoPixel pixels = Adafruit_NeoPixel(64);
     BaseModus* modus;
