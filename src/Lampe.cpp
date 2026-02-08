@@ -6,12 +6,17 @@
 #include <Arduino.h>
 #include "modus/Modus.h"
 #include <Adafruit_NeoPixel.h>
+// Modulo operator that works for negative numbers
+#define MOD(a, m)  ((a % m + m) % m)
 
 Lampe::Lampe(int16_t pin, int16_t numPixels) 
     : pixels(Adafruit_NeoPixel(numPixels, pin, NEO_GRB + NEO_KHZ800)),
       modus(new ShiftModus(*this)),
       numPixels(numPixels)
     {
+    screenSize = getNumPixels()/LAMPE_SCREENS;
+    screenHeight = (int) sqrt(screenSize);
+    Serial.println("Screen Size and Height " + String(screenSize) + " " + String(screenHeight));
     loadModi();
     pixels.begin();
     modus->enter();
@@ -63,6 +68,22 @@ void Lampe::setPixelColor(uint16_t n, uint32_t c)
     isDirty = true;
 }
 
+void Lampe::setPixelColor(uint32_t c, uint16_t x, uint16_t y, bool screen0, bool screen1, bool screen2, bool screen3)
+{
+    if (screen0) {
+        setPixelColor(MOD(x,screenHeight) + (MOD(y,screenHeight) * screenHeight), c);
+    }
+    if (screen1) {
+        setPixelColor(MOD(x,screenHeight) + (MOD(y,screenHeight) * screenHeight) + (screenSize), c);
+    }
+    if (screen2) {
+        setPixelColor(MOD(x,screenHeight) + (MOD(y,screenHeight) * screenHeight) + (screenSize * 2), c);
+    }
+    if (screen3) {
+        setPixelColor(MOD(x,screenHeight) + (MOD(y,screenHeight) * screenHeight) + (screenSize * 3), c);
+    }
+}
+
 void Lampe::setBrightness(uint8_t brightness) {
     if (pixels.getBrightness() != brightness) {
         pixels.setBrightness(brightness);
@@ -100,43 +121,33 @@ bool Lampe::update() {
 
 
 
-void Lampe::shiftPixels(int shift) {
-    int absShift = abs(shift);
-    auto temp = new uint32_t[absShift];
+void Lampe::shiftPixels(int x, int y, int screen) {
     // Helligkeit speichern
     auto lastBrightness = pixels.getBrightness();
     pixels.setBrightness(255);
 
-    if (shift > 0) {
-        // Positive Verschiebung: Speichern der ersten 'shift' Pixel
-        for (int i = 0; i < absShift; i++) {
-            temp[i] = pixels.getPixelColor(i);
+    // Shift pixel about shift and stores it in temp
+    auto temp = new uint32_t[numPixels];
+    for (int i = 0; i < numPixels; i++) {
+        int _screen = i / screenSize;
+        int _y = (i % screenSize) / screenHeight;
+        int _x = (i % screenSize) % screenHeight;
+        _x -= x;
+        _screen -= screen;
+        _y -= y;
+        // shift x overflow to next screen
+        if (_x < 0) {
+            _screen += 1; //TODO fals schift größer als ein Screen
+        } else if (_x >= screenHeight) {
+            _screen -= 1;
         }
-
-        // Verschieben der Pixel-Daten nach rechts
-        for (int i = 0; i < numPixels - absShift; i++) {
-            pixels.setPixelColor(i, pixels.getPixelColor(i + absShift));
-        }
-
-        // Setzen der gespeicherten Pixel am Ende
-        for (int i = 0; i < absShift; i++) {
-            pixels.setPixelColor(numPixels - absShift + i, temp[i]);
-        }
-    } else {
-        // Negative Verschiebung: Speichern der letzten 'absShift' Pixel
-        for (int i = 0; i < absShift; i++) {
-            temp[i] = pixels.getPixelColor(numPixels - 1 - i);
-        }
-
-        // Verschieben der Pixel-Daten nach links
-        for (int i = numPixels - 1; i >= absShift; i--) {
-            pixels.setPixelColor(i, pixels.getPixelColor(i - absShift));
-        }
-
-        // Setzen der gespeicherten Pixel am Anfang
-        for (int i = 0; i < absShift; i++) {
-            pixels.setPixelColor(absShift - 1 - i, temp[i]);
-        }
+        int shifted = MOD(_x,screenHeight) + (MOD(_y,screenHeight) * screenHeight) + (MOD(_screen,LAMPE_SCREENS) * screenSize);
+        // Serial.println(String(i) + "," + String(shifted) + "," + String(_x) + "," + String(_y) + "," + String(_screen));
+        temp[i] = pixels.getPixelColor(MOD(shifted, numPixels));
+    }
+    // write temp back to pixels
+    for (int i = 0; i < numPixels; i++) {
+        pixels.setPixelColor(i, temp[i]);
     }
 
     // Helligkeit wiederherstellen
@@ -149,7 +160,22 @@ void Lampe::shiftPixels(int shift) {
     delete[] temp;
 }
 
-int16_t Lampe::getNumPixels() const //TODO per pre-compiler umsetzen
+void Lampe::rainbow()
+{
+    pixels.rainbow();
+}
+
+int16_t Lampe::getNumPixels() const
 {
     return numPixels;
+}
+
+int Lampe::getScreenSize() const
+{
+    return screenSize;
+}
+
+int Lampe::getScreenHeight() const
+{
+    return screenHeight;
 }

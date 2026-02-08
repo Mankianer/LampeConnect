@@ -7,18 +7,20 @@
 void ShiftModus::enter() {
     lampe.setBrightness(255);
     lampe.clear();
-    for ( int z = 0; z < 4; ++z) {
-        for (int y = 0; y < 8; ++y) {
-            lampe.setPixelColor(3 + y * 8 + z * 64, Adafruit_NeoPixel::Color(0, 20, 0));
-        }
+
+    for (int y = 0; y < 8; ++y) {
+        lampe.setPixelColor(Adafruit_NeoPixel::Color(0, 20, 0), 3, y, true,false,true,true);
+        lampe.setPixelColor(Adafruit_NeoPixel::Color(0, 0, 20), y, 3, true,false,true,true);
     }
+    lampe.setPixelColor(0, Adafruit_NeoPixel::Color(20, 0, 0));
+    lampe.setPixelColor(1, Adafruit_NeoPixel::Color(20, 20, 0));
     lastUpdate = millis();
 }
 
 void ShiftModus::update() {
     auto shift = (millis() - lastUpdate) / maxSpeedms;
     if(shift) {
-        this->lampe.shiftPixels(shift);
+        this->lampe.shiftPixels(1, 0);
         lastUpdate = millis();
     }
 }

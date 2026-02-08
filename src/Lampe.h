@@ -10,6 +10,7 @@ class BaseModus;
 #include <stdint.h>
 #include "BLESetUp.h"
 #include <Adafruit_NeoPixel.h>
+#define LAMPE_SCREENS 4
 
 class Lampe {
 public:
@@ -23,8 +24,12 @@ public:
     void inputBLE(BLEEvent<long> event);
     void clear();
     void setPixelColor(uint16_t n, uint32_t c);
-    void shiftPixels(int shift);
+    void setPixelColor(uint32_t c, uint16_t x, uint16_t y, bool screen0 = true, bool screen1 = true, bool screen2 = true, bool screen3 = true);
+    void shiftPixels(int x, int y = 0, int screen = 0);
+    void rainbow();
     int16_t getNumPixels() const;
+    int getScreenSize() const;
+    int getScreenHeight() const;
 private:
     Adafruit_NeoPixel pixels = Adafruit_NeoPixel(64);
     BaseModus* modus;
@@ -33,6 +38,8 @@ private:
     uint32_t lastHue = 0;
     bool isDirty = true;
     int16_t numPixels;
+    int screenHeight;
+    int screenSize;
 };
 
 
